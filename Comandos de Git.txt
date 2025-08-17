@@ -16,6 +16,7 @@ después está el staging area, donde subimos los cambios, q luego serán subido
 el repositorio ya es el lugar donde estan los archivos con el proyecto terminado(commiteados)
 
 //comandos de cmd
+touch nombre.txt para crear archivo
 cd para moverse entre directorios 
 dir o ls para ver documentos en el directorio actual y -a para ver archivos ocultos
 mkdir nombre_carpeta para crear una carpeta
@@ -83,3 +84,54 @@ git merge nombre-rama (rama-destino) hace q los cambios del commit de nombre-ram
 
 //merge conflicts
 no hay conflictos si quiero hacer un merge y el ultimo commit de la rama principal es el primer commit de la rama a fusionar, el problema viene cuando la rama a fusionar viene con su commit al principal, cuando el principal hizo otros commits después de la creación de la rama a fusionar, ahi hay conflictos 
+
+//github
+los repositorios remotos, la cuarta parte donde se guardan commits en internet
+
+git clone direccionURL para traer una copia exacta del repositorio remoto al repositorio local, desde el ultimo commit, con todo el historial anterior
+cuando hablamos de repositorio remoto hablamos de algo q esta externamente por fuera del repositario q se debe nombrar de una forma, lo nombramos como origin.
+origin es asi porque es el lugar desde donde descargamos el repositorio
+
+git push nos sirve para subir nuestros cambios desde el repositorio local al repositorio remoto:
+git push (referencia del repositorio, normalmente origin) master
+
+si viene otra persona y hace un cambio en el repositorio remoto, para evitar descargar todooo el repositorio de nuevo con lo pesado q es git clone, se usa git pull
+git pull baja los cambios que sabemos que están en el servidor, ya sean archivos nuevos o modificados.
+git pull origin master por si no funciona ah.
+
+basicamente git pull hace git fetch y luego git merge, hace ambos procesos, baja los archivos del servidor y los funciona a la rama, en nuestro ultimo commit local, probablidad mayor de conflictos
+
+Cuando usamos git fetch no cambian nuestras ramas locales automaticamente y podemos revisar los cambios antes de fusionar todo, git fetch crea una rama auxiliar donde se guardan los cambios, y de ahi se puede modificar o lo que quieras y luego desde la rama original hacer merge con los cambios q te dio fetch en la rama auxiliar
+Usa git fetch si quieres ver primero qué hay antes de mezclar.
+Usa git pull si quieres mantener tu rama al día directamente con el remoto.
+
+para migrar un repositorio local a uno remoto de 0 a 100 podemos usar
+git remote add origin URLdelrepositorioremoto
+git remote -v nos da todas las cosas q se pueden hacer con el repositorio remoto que ya tenemos en nuestro repositorio local
+git branch -M main (el repositorio puede cambiarse de main a como quieras)
+git push -u origin main configura automaticamente para cuando hagas un push siempre se haga en origin main 
+
+//Forks
+con un fork desde github subimos un repo a nuestro repo remoto
+
+//pull request
+es cuando le hacen un fork a tu repositorio y te piden que les subas sus cambios hechos en su copia a tu repositorio original
+
+//GitHub Issues
+son asignaciones con etiquetas y clasificaciones para marcar ToDos a distintos usuarios de una organizacion dentro del repositorio, haciendo un checklist de cada issue, los milestones son agrupaciones de issues, por ejemplos los lideres de proyectos pueden ir asignados un problema a cada dev a cargo del proyecto
+
+//BUENAS PRACTICAS CON GIT Y GITHUB
+*Agregar un .gitignore.
+*Configurar user y email.
+*Cuando crear una rama? cada rama que creamos debe tener solo una responsabilidad (Solid) cuando se cumple esa rama se limpia y se elimina.
+*En las ramas, usar nombres descriptivos.
+*Usar kebab-case en las ramas.
+*Antes de hacer un pull request, hacer pruebas de forma local con los cambios hechos del original con lo nuevo, para probar bien todo, si funciona ahi recien hacer un pull request.
+*Evitar trabajar en la rama principal.
+*Investigar estrategias de branching para la fusión de ramas.
+*Los commits deben ser significativos y atómicos.
+*Cada commit debe tener un mensaje claro y consiso
+*hacer git pull a menudo
+*Es bueno que los commits tengan tags
+
+Para continuar aprendiendo: git stash(permite guardar cambios no comprometidos), cherry pig, tags, milestones, extensiones de vs code como git grab
