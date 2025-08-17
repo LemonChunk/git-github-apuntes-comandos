@@ -1,0 +1,85 @@
+//configuraciones previas
+(global para todos los repositorios, local para cada repositorio)
+git config --global user.name "{nombre}"
+git config --global user.email "{email}"
+git config --list (todas las configuraciones listas)
+git config --global core.editor "code --wait" (para que vs code espere a q cierres el editor para confirmar cambios)
+git config --global color.ui true (ventanas de salidas con color)
+git config --global core.autocrlf true (permite q windows pueda tener compatibilidad con la forma de utilizar \n)
+git config --global core.abbrev (numero) para identidicar hashes de commits, cada commit tiene un hasheo por seguridad (clave/valor) 
+//partes de git
+una cosa es un repositorio, otra el lugar de trabajo(directorio)
+el repositorio estará ubicado fisicamente en otro lado aparte del lugar de trabajo
+
+después está el staging area, donde subimos los cambios, q luego serán subidos al repositorio, punto medio.
+
+el repositorio ya es el lugar donde estan los archivos con el proyecto terminado(commiteados)
+
+//comandos de cmd
+cd para moverse entre directorios 
+dir o ls para ver documentos en el directorio actual y -a para ver archivos ocultos
+mkdir nombre_carpeta para crear una carpeta
+cd.. para volver atrás
+rmdir para borrar una carpeta
+pwd para ver la ruta de la carpeta
+mv nombre_Archivo nuevo_nombre cambia de nombre el archivo.
+rm nombre_Archivo elimina el archivo del directorio
+//Comandos de git
+git init para crear un repositorio en la carpeta actual
+git add para añadir un archivo al stage
+git add . para añadir todos los archivos de la carpeta actual al stage
+git status nos muestra info del area de trabajo y el stage(area de preparación)
+git rm --cached nombre_archivo para sacar un archivo del stage
+
+los untracked files son archivos sin seguimiento de git, no forman parte del stage
+git commit -m "comentario acerca del commit" sube lo q está en stage al repositorio
+se puede hacer git commit, sin mensaje.
+git commit -a hace un commit de los archivos incluso si no están en stage
+git restore nombre_archivo sirve para restaurar un archivo eliminado que estaba en stage
+git checkout nombre_archivo, vuelve el archivo atrás, hasta la última vez que le hiciste commit (pierdo las modificaciones que hice después de ese ultimo commit)
+git reset --hard hace que los archivos en stage que hayan sido modificados unicamente en el area de trabajo, vuelvan al estado del ultimo commit.
+--hard hace el reseteo extremo, borra todo lo que esta en staging, descarta todos los cambios en el area de trabajo.
+reset solo elimina los cambios del stage, pero no los cambios realizados en el area de trabajo
+git mv nombre_Archivo nuevo_nombre, cambia el nombre del archivo, como tiene git adelante, ese cambio de nombre pasa directo a stage sin add.
+git status -s nos muestra el estado del stage mas elegante
+git show nombrearchivo nos muestra el archivo ya commiteado
+git diff --staged muestra las diferencias entre lo q esta en stage y el repo.
+git log para ver el registro de todos los commits (git log --oneline lo abrevia)
+HEAD Es nuestro puntero para saber nuestro commit actual.
+ejemplo para comparar commits:
+git diff 4427b 9ccc3 
+git diff --name-only 4427b 9ccc3 me muestra el nombre de los archivos q cambiaron en cada commit
+git diff -world-diff 4427b 9ccc3 para ver que lineas cambiaron entre cada commit y sus diferencias. el rojo es del primer commit el segundo el verde.
+//Modificar y deshacer commits
+git commit --amend reemplaza un commit por otro para modificarlo, esto se hace con el ultimo commit.
+git rebase -i HEAD^^^ 
+Qué hace: te deja editar, combinar, reordenar o borrar commits de la historia.
+
+Si ponés drop en un commit, desaparece de la historia de la rama.
+
+Muy usado para limpiar la historia antes de publicar.
+git rebase --continue el rebase para ir agarrando commits desde el actual para abajo e ir reemplazandolos uno a uno para su modificacion o qsyo NO RECOMENDADO USAR REBASE, SIMPPLEMENTE USAR AMEND PARA CAMBIAR UNICAMENTE EL ULTIMO COMMIT
+$ git reset --soft baddd
+lleva el puntero HEAD hasta cierto commit, y todo lo que estaba por encima de ee commit te lo pone en area de staging
+git reset --mixed baddd
+lleva el puntero HEAD hasta cierto commit, y borra todo lo del stage, el area de trabajo no se ve afectada.
+get reset --hard baddd
+lleva el puntero HEAD hasta cierto commit, borra todo lo del stage, y ademas elimina todos los cambios en el archivo del commit al q apuntamos, todos aquellos archivos no pertenecientes al commit seleccionado no se ven afectados.
+
+//RAMAS 
+una rama es un puntero q apunta a una lista de commits en tu codigo
+al crear una rama, se crea una copia del proyecto para trabajar aparte, evitando modificar el historial de la rama principal. Si terminas de trabajar en tu nueva rama, llevas esos cambios q hiciste experimentalmente a la rama principal para q se guarde en el historial mas importante por asi decirlo, esa union de cambios se llama MERGE.
+
+git branch nos muestra todas las ramas creadas
+git branch nombre_rama para crear una nueva rama (en esa nueva rama hay una copia del proyecto claro)
+git checkout nombre_rama nos permite cambiar de rama (forma clasica)
+git switch nombre_rama nos permite cambiar de rama(forma moderna q está hecha especificamente pa esto )
+git switch -c rama-nombre crea y cambia hacia la rama creada lol
+git branch -d nombre-rama para borrar la rama, debemos estar fuera de ella.
+
+//merge
+es fusionar commits de distintas ramas
+git merge nombre-rama (rama-destino) hace q los cambios del commit de nombre-rama se añadan al commit de la rama-destino
+
+//merge conflicts
+no hay conflictos si quiero hacer un merge y el ultimo commit de la rama principal es el primer commit de la rama a fusionar, el problema viene cuando la rama a fusionar viene con su commit al principal, cuando el principal hizo otros commits después de la creación de la rama a fusionar, ahi hay conflictos 
