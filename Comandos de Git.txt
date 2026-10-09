@@ -1,137 +1,710 @@
-//configuraciones previas
-(global para todos los repositorios, local para cada repositorio)
-git config --global user.name "{nombre}"
-git config --global user.email "{email}"
-git config --list (todas las configuraciones listas)
-git config --global core.editor "code --wait" (para que vs code espere a q cierres el editor para confirmar cambios)
-git config --global color.ui true (ventanas de salidas con color)
-git config --global core.autocrlf true (permite q windows pueda tener compatibilidad con la forma de utilizar \n)
-git config --global core.abbrev (numero) para identidicar hashes de commits, cada commit tiene un hasheo por seguridad (clave/valor) 
-//partes de git
-una cosa es un repositorio, otra el lugar de trabajo(directorio)
-el repositorio estará ubicado fisicamente en otro lado aparte del lugar de trabajo
+Te lo organicé como unos apuntes de Git y GitHub para estudiar, con títulos, explicaciones, comandos y ejemplos. También corregí algunos detalles técnicos importantes para que no aprendas conceptos equivocados, especialmente en `git reset`, `git restore`, `git pull`, las ramas y los conflictos.
 
-después está el staging area, donde subimos los cambios, q luego serán subidos al repositorio, punto medio.
+# Guía de estudio: Git y GitHub
 
-el repositorio ya es el lugar donde estan los archivos con el proyecto terminado(commiteados)
+## 1. Configuración inicial de Git
 
-//comandos de cmd
-touch nombre.txt para crear archivo
-cd para moverse entre directorios 
-dir o ls para ver documentos en el directorio actual y -a para ver archivos ocultos
-mkdir nombre_carpeta para crear una carpeta
-cd.. para volver atrás
-rmdir para borrar una carpeta
-pwd para ver la ruta de la carpeta
-mv nombre_Archivo nuevo_nombre cambia de nombre el archivo.
-rm nombre_Archivo elimina el archivo del directorio
-//Comandos de git
-git init para crear un repositorio en la carpeta actual
-git add para añadir un archivo al stage
-git add . para añadir todos los archivos de la carpeta actual al stage
-git status nos muestra info del area de trabajo y el stage(area de preparación)
-git rm --cached nombre_archivo para sacar un archivo del stage
+Git permite configurar datos y comportamientos que se utilizan al trabajar con repositorios.
 
-los untracked files son archivos sin seguimiento de git, no forman parte del stage
-git commit -m "comentario acerca del commit" sube lo q está en stage al repositorio
-se puede hacer git commit, sin mensaje.
-git commit -a hace un commit de los archivos incluso si no están en stage
-git restore nombre_archivo sirve para restaurar un archivo eliminado que estaba en stage
-git checkout nombre_archivo, vuelve el archivo atrás, hasta la última vez que le hiciste commit (pierdo las modificaciones que hice después de ese ultimo commit)
-git reset --hard hace que los archivos en stage que hayan sido modificados unicamente en el area de trabajo, vuelvan al estado del ultimo commit.
---hard hace el reseteo extremo, borra todo lo que esta en staging, descarta todos los cambios en el area de trabajo.
-reset solo elimina los cambios del stage, pero no los cambios realizados en el area de trabajo
-git mv nombre_Archivo nuevo_nombre, cambia el nombre del archivo, como tiene git adelante, ese cambio de nombre pasa directo a stage sin add.
-git status -s nos muestra el estado del stage mas elegante
-git show nombrearchivo nos muestra el archivo ya commiteado
-git diff --staged muestra las diferencias entre lo q esta en stage y el repo.
-git log para ver el registro de todos los commits (git log --oneline lo abrevia)
-HEAD Es nuestro puntero para saber nuestro commit actual.
-ejemplo para comparar commits:
-git diff 4427b 9ccc3 
-git diff --name-only 4427b 9ccc3 me muestra el nombre de los archivos q cambiaron en cada commit
-git diff -world-diff 4427b 9ccc3 para ver que lineas cambiaron entre cada commit y sus diferencias. el rojo es del primer commit el segundo el verde.
-//Modificar y deshacer commits
-git commit --amend reemplaza un commit por otro para modificarlo, esto se hace con el ultimo commit.
-git rebase -i HEAD^^^ 
-Qué hace: te deja editar, combinar, reordenar o borrar commits de la historia.
+Existen dos niveles principales de configuración:
 
-Si ponés drop en un commit, desaparece de la historia de la rama.
+* Global: se aplica a todos los repositorios del usuario.
 
-Muy usado para limpiar la historia antes de publicar.
-git rebase --continue el rebase para ir agarrando commits desde el actual para abajo e ir reemplazandolos uno a uno para su modificacion o qsyo NO RECOMENDADO USAR REBASE, SIMPPLEMENTE USAR AMEND PARA CAMBIAR UNICAMENTE EL ULTIMO COMMIT
-$ git reset --soft baddd
-lleva el puntero HEAD hasta cierto commit, y todo lo que estaba por encima de ee commit te lo pone en area de staging
+* Local: se aplica únicamente al repositorio actual y prevalece sobre la configuración global.
+
+Bash
+
+```
+# Configurar nombre y correo globales
+git config --global user.name "Nombre Apellido"
+git config --global user.email "correo@ejemplo.com"
+
+# Configurar nombre y correo para el repositorio actual
+git config --local user.name "Nombre Apellido"
+git config --local user.email "correo@ejemplo.com"
+
+# Mostrar todas las configuraciones efectivas
+git config --list
+
+# Configurar Visual Studio Code como editor
+git config --global core.editor "code --wait"
+
+# Habilitar colores en la terminal
+git config --global color.ui true
+
+# Ajustar finales de línea para Windows
+git config --global core.autocrlf true
+
+# Consultar la abreviación mínima de los hashes
+git config --get core.abbrev
+```
+
+Aclaraciones importantes:
+
+* `code --wait` hace que Git espere a que cierres la ventana de edición antes de continuar.
+
+* `core.autocrlf true` ayuda a manejar las diferencias entre los finales de línea de Windows (`CRLF`) y Unix/Linux (`LF`).
+
+* `core.abbrev` controla la longitud de las abreviaciones de los identificadores de los commits. No cambia la seguridad ni el hash completo del commit.
+
+* Si no configuraste `core.abbrev`, Git normalmente determina la longitud abreviada automáticamente.
+
+## 2. Las cuatro áreas de Git
+
+1. Working Directory
+
+Directorio de trabajo: archivos que estás creando o modificando.
+
+`git add`
+
+2. Staging Area
+
+Área de preparación: cambios seleccionados para el próximo commit.
+
+`git commit`
+
+3. Repositorio local
+
+Historial de commits guardado en tu computadora.
+
+`git push` / `git fetch`
+
+4. Repositorio remoto
+
+Repositorio alojado en un servidor, por ejemplo GitHub.
+
+### Conceptos fundamentales
+
+* Directorio de trabajo: los archivos y carpetas que ves y editás.
+
+* Staging Area: una selección de los cambios que querés incluir en el próximo commit.
+
+* Repositorio local: guarda el historial y los objetos de Git, normalmente dentro de la carpeta oculta `.git`.
+
+* Repositorio remoto: otra copia del repositorio alojada en un servidor, que permite compartir el proyecto y colaborar.
+
+Un commit no necesariamente representa un proyecto terminado. Representa una versión registrada del proyecto.
+
+## 3. Comandos básicos de la terminal
+
+Estos comandos sirven para moverte por carpetas y administrar archivos. Algunos pertenecen a CMD, otros a PowerShell, Bash o Git Bash; no todos funcionan de la misma forma en todas las terminales.
+
+| Comando                    | Función                                            |
+| -------------------------- | -------------------------------------------------- |
+| `cd carpeta`               | Entrar a una carpeta.                              |
+| `cd ..`                    | Volver a la carpeta anterior en la jerarquía.      |
+| `dir`                      | Listar archivos en CMD y PowerShell.               |
+| `ls`                       | Listar archivos en PowerShell, Bash y Git Bash.    |
+| `ls -a`                    | Mostrar también archivos ocultos en Bash/Git Bash. |
+| `pwd`                      | Mostrar la ruta actual.                            |
+| `mkdir nombre`             | Crear una carpeta.                                 |
+| `rmdir nombre`             | Eliminar una carpeta vacía.                        |
+| `touch archivo.txt`        | Crear un archivo vacío en Bash/Git Bash.           |
+| `mv archivo.txt nuevo.txt` | Mover o renombrar archivos en Bash/Git Bash.       |
+| `rm archivo.txt`           | Eliminar un archivo en Bash/Git Bash.              |
+
+En CMD, las alternativas habituales son:
+
+* Crear un archivo vacío: `type nul > archivo.txt`
+
+* Renombrar: `ren archivo.txt nuevo.txt`
+
+* Eliminar: `del archivo.txt`
+
+Precaución: los comandos de eliminación pueden borrar archivos sin enviarlos a la papelera.
+
+## 4. Crear un repositorio y registrar cambios
+
+### 4.1. Inicializar Git
+
+Bash
+
+```
+git init
+```
+
+Inicializa un repositorio Git en el directorio actual, creando la carpeta oculta `.git`.
+
+### 4.2. Preparar archivos
+
+Bash
+
+```
+git add archivo.txt
+```
+
+Agrega los cambios de `archivo.txt` al staging area.
+
+Bash
+
+```
+git add .
+```
+
+Prepara los cambios de los archivos dentro del directorio actual y sus subdirectorios, respetando las reglas de exclusión de Git.
+
+Bash
+
+```
+git status
+```
+
+Muestra el estado de los archivos: cuáles tienen cambios, cuáles están preparados y cuáles todavía no tienen seguimiento.
+
+### 4.3. Archivos sin seguimiento
+
+Los untracked files son archivos que Git todavía no está siguiendo.
+
+Por ejemplo, si creás `notas.txt` dentro del repositorio, Git lo mostrará como un archivo sin seguimiento hasta que lo agregues:
+
+Bash
+
+```
+git add notas.txt
+```
+
+A partir de ese momento, sus cambios pueden registrarse en commits.
+
+### 4.4. Crear un commit
+
+Bash
+
+```
+git commit -m "Agregar archivo de notas"
+```
+
+Crea un commit con los cambios preparados en el staging area.
+
+También podés ejecutar:
+
+Bash
+
+```
+git commit
+```
+
+Git abrirá el editor configurado para que escribas el mensaje del commit.
+
+Importante: `git commit -a` prepara automáticamente los cambios de archivos que Git ya sigue y crea un commit. No incluye archivos nuevos sin seguimiento.
+
+Bash
+
+```
+git commit -am "Actualizar documentación"
+```
+
+### 4.5. Sacar archivos del staging
+
+Bash
+
+```
+git rm --cached archivo.txt
+```
+
+Quita el archivo del seguimiento preparado para su eliminación, pero conserva el archivo en tu directorio de trabajo. Si el archivo ya estaba versionado, Git registrará su eliminación para el próximo commit.
+
+Para quitar un archivo del staging sin eliminarlo del repositorio ni del directorio de trabajo:
+
+Bash
+
+```
+git restore --staged archivo.txt
+```
+
+Este último comando es más apropiado cuando simplemente querés deshacer un `git add`.
+
+## 5. Consultar el estado y las diferencias
+
+| Comando                     | ¿Qué muestra?                                            |
+| --------------------------- | -------------------------------------------------------- |
+| `git status`                | Estado detallado del repositorio.                        |
+| `git status -s`             | Estado resumido de los archivos.                         |
+| `git log`                   | Historial de commits.                                    |
+| `git log --oneline`         | Historial resumido en una línea por commit.              |
+| `git show`                  | Detalles de un commit, incluyendo sus cambios.           |
+| `git show HEAD:archivo.txt` | Contenido del archivo guardado en el commit actual.      |
+| `git diff`                  | Diferencias entre el directorio de trabajo y el staging. |
+| `git diff --staged`         | Diferencias entre el staging y el último commit.         |
+
+### Comparar commits
+
+Cada commit tiene un identificador llamado hash, que permite identificarlo. Git utiliza objetos identificados por hashes criptográficos; no son simplemente claves numéricas.
+
+Bash
+
+```
+git diff 4427b 9ccc3
+```
+
+Muestra las diferencias entre dos commits.
+
+Bash
+
+```
+git diff --name-only 4427b 9ccc3
+```
+
+Muestra solamente los nombres de los archivos que cambiaron.
+
+Bash
+
+```
+git diff --word-diff 4427b 9ccc3
+```
+
+Muestra las diferencias a nivel de palabras. El nombre correcto de la opción es `--word-diff`, no `--world-diff`.
+
+En una comparación tradicional, las líneas eliminadas suelen mostrarse en rojo y las agregadas en verde, aunque depende de la terminal.
+
+### ¿Qué es HEAD?
+
+`HEAD` es una referencia que indica la posición actual de Git en el historial. Normalmente apunta al commit de la rama en la que estás trabajando.
+
+Por ejemplo:
+
+Bash
+
+```
+git log --oneline
+git diff HEAD~1 HEAD
+```
+
+El segundo comando compara el commit actual con su antecesor inmediato.
+
+## 6. Modificar y deshacer cambios
+
+Esta parte es especialmente importante porque algunos comandos pueden hacerte perder trabajo.
+
+### 6.1. Descartar cambios de un archivo
+
+Bash
+
+```
+git restore archivo.txt
+```
+
+Restaura el archivo al estado del staging. Si el archivo no tiene cambios preparados, normalmente lo restaura al estado del último commit.
+
+Cuidado: descarta las modificaciones no preparadas del archivo.
+
+El comando clásico equivalente en ciertos casos era:
+
+Bash
+
+```
+git checkout -- archivo.txt
+```
+
+Actualmente, se recomienda `git restore` para esta tarea porque expresa mejor la intención.
+
+### 6.2. Deshacer cambios del staging
+
+Bash
+
+```
+git restore --staged archivo.txt
+```
+
+Quita los cambios del archivo del staging, pero conserva las modificaciones en el directorio de trabajo.
+
+### 6.3. Entender git reset
+
+`git reset` mueve la referencia de la rama actual a otro commit y, según la opción elegida, modifica el staging y el directorio de trabajo.
+
+| Comando                    | Efecto                                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `git reset --soft HEAD~1`  | Deshace el último commit, conservando sus cambios en el staging.                                          |
+| `git reset --mixed HEAD~1` | Deshace el último commit y deja los cambios en el directorio de trabajo, fuera del staging.               |
+| `git reset --hard HEAD~1`  | Deshace el último commit y descarta los cambios correspondientes del staging y del directorio de trabajo. |
+
+Si usás un hash específico en lugar de `HEAD~1`, Git se mueve al commit indicado.
+
+Por ejemplo:
+
+Bash
+
+```
+git reset --soft baddd
 git reset --mixed baddd
-lleva el puntero HEAD hasta cierto commit, y borra todo lo del stage, el area de trabajo no se ve afectada.
-get reset --hard baddd
-lleva el puntero HEAD hasta cierto commit, borra todo lo del stage, y ademas elimina todos los cambios en el archivo del commit al q apuntamos, todos aquellos archivos no pertenecientes al commit seleccionado no se ven afectados.
+git reset --hard baddd
+```
 
-//RAMAS 
-una rama es un puntero q apunta a una lista de commits en tu codigo
-al crear una rama, se crea una copia del proyecto para trabajar aparte, evitando modificar el historial de la rama principal. Si terminas de trabajar en tu nueva rama, llevas esos cambios q hiciste experimentalmente a la rama principal para q se guarde en el historial mas importante por asi decirlo, esa union de cambios se llama MERGE.
+`baddd` es solamente un ejemplo: debe reemplazarse por un hash real.
 
-git branch nos muestra todas las ramas creadas
-git branch nombre_rama para crear una nueva rama (en esa nueva rama hay una copia del proyecto claro)
-git checkout nombre_rama nos permite cambiar de rama (forma clasica)
-git switch nombre_rama nos permite cambiar de rama(forma moderna q está hecha especificamente pa esto )
-git switch -c rama-nombre crea y cambia hacia la rama creada lol
-git branch -d nombre-rama para borrar la rama, debemos estar fuera de ella.
+Advertencia: `--hard` puede eliminar modificaciones que todavía no guardaste en un commit. No lo ejecutes si no estás seguro de qué cambios querés descartar. Los archivos sin seguimiento no se eliminan automáticamente por el mero hecho de usar `git reset --hard`.
 
-//merge
-es fusionar commits de distintas ramas
-git merge nombre-rama (rama-destino) hace q los cambios del commit de nombre-rama se añadan al commit de la rama-destino
+### 6.4. Modificar el último commit
 
-//merge conflicts
-no hay conflictos si quiero hacer un merge y el ultimo commit de la rama principal es el primer commit de la rama a fusionar, el problema viene cuando la rama a fusionar viene con su commit al principal, cuando el principal hizo otros commits después de la creación de la rama a fusionar, ahi hay conflictos 
+Bash
 
-//github
-los repositorios remotos, la cuarta parte donde se guardan commits en internet
+```
+git commit --amend
+```
 
-git clone direccionURL para traer una copia exacta del repositorio remoto al repositorio local, desde el ultimo commit, con todo el historial anterior
-cuando hablamos de repositorio remoto hablamos de algo q esta externamente por fuera del repositario q se debe nombrar de una forma, lo nombramos como origin.
-origin es asi porque es el lugar desde donde descargamos el repositorio
+Permite modificar el mensaje del último commit o reemplazarlo incorporando cambios preparados adicionales.
 
-git push nos sirve para subir nuestros cambios desde el repositorio local al repositorio remoto:
-git push (referencia del repositorio, normalmente origin) master
+Por ejemplo, si olvidaste agregar un archivo:
 
-si viene otra persona y hace un cambio en el repositorio remoto, para evitar descargar todooo el repositorio de nuevo con lo pesado q es git clone, se usa git pull
-git pull baja los cambios que sabemos que están en el servidor, ya sean archivos nuevos o modificados.
-git pull origin master por si no funciona ah.
+Bash
 
-basicamente git pull hace git fetch y luego git merge, hace ambos procesos, baja los archivos del servidor y los funciona a la rama, en nuestro ultimo commit local, probablidad mayor de conflictos
+```
+git add archivo_olvidado.txt
+git commit --amend
+```
 
-Cuando usamos git fetch no cambian nuestras ramas locales automaticamente y podemos revisar los cambios antes de fusionar todo, git fetch crea una rama auxiliar donde se guardan los cambios, y de ahi se puede modificar o lo que quieras y luego desde la rama original hacer merge con los cambios q te dio fetch en la rama auxiliar
-Usa git fetch si quieres ver primero qué hay antes de mezclar.
-Usa git pull si quieres mantener tu rama al día directamente con el remoto.
+Git crea un commit que reemplaza al anterior en la historia de la rama.
 
-para migrar un repositorio local a uno remoto de 0 a 100 podemos usar
-git remote add origin URLdelrepositorioremoto
-git remote -v nos da todas las cosas q se pueden hacer con el repositorio remoto que ya tenemos en nuestro repositorio local
-git branch -M main (el repositorio puede cambiarse de main a como quieras)
-git push -u origin main configura automaticamente para cuando hagas un push siempre se haga en origin main 
+Conviene evitar modificar commits que ya compartiste con otras personas, porque cambia su identificador y puede complicar la colaboración.
 
-//Forks
-con un fork desde github subimos un repo a nuestro repo remoto
+### 6.5. Reescribir varios commits con rebase interactivo
 
-//pull request
-es cuando le hacen un fork a tu repositorio y te piden que les subas sus cambios hechos en su copia a tu repositorio original
+Bash
 
-//GitHub Issues
-son asignaciones con etiquetas y clasificaciones para marcar ToDos a distintos usuarios de una organizacion dentro del repositorio, haciendo un checklist de cada issue, los milestones son agrupaciones de issues, por ejemplos los lideres de proyectos pueden ir asignados un problema a cada dev a cargo del proyecto
+```
+git rebase -i HEAD~3
+```
 
-//BUENAS PRACTICAS CON GIT Y GITHUB
-*Agregar un .gitignore.
-*Configurar user y email.
-*Cuando crear una rama? cada rama que creamos debe tener solo una responsabilidad (Solid) cuando se cumple esa rama se limpia y se elimina.
-*En las ramas, usar nombres descriptivos.
-*Usar kebab-case en las ramas.
-*Antes de hacer un pull request, hacer pruebas de forma local con los cambios hechos del original con lo nuevo, para probar bien todo, si funciona ahi recien hacer un pull request.
-*Evitar trabajar en la rama principal.
-*Investigar estrategias de branching para la fusión de ramas.
-*Los commits deben ser significativos y atómicos.
-*Cada commit debe tener un mensaje claro y consiso
-*hacer git pull a menudo
-*Es bueno que los commits tengan tags
+Abre una lista de los últimos tres commits anteriores a `HEAD` para permitir modificar la historia.
 
-Para continuar aprendiendo: git stash(permite guardar cambios no comprometidos), cherry pig, tags, milestones, extensiones de vs code como git grab
+Algunas opciones que pueden aparecer en esa lista:
+
+* `pick`: conservar el commit.
+
+* `reword`: cambiar su mensaje.
+
+* `edit`: detenerse para modificar el commit.
+
+* `squash`: combinarlo con el anterior, incluyendo la posibilidad de combinar mensajes.
+
+* `drop`: eliminarlo de la historia reescrita.
+
+Para continuar un rebase cuando Git se detiene:
+
+Bash
+
+```
+git rebase --continue
+```
+
+Si querés abandonar la operación:
+
+Bash
+
+```
+git rebase --abort
+```
+
+El rebase no es necesariamente peligroso ni debe evitarse siempre. Es útil para ordenar una rama de trabajo, pero hay que tener cuidado al reescribir commits que otras personas ya utilizan.
+
+## 7. Ramas (branches)
+
+Una rama es una referencia que apunta a un commit. A medida que creás nuevos commits en esa rama, la referencia avanza.
+
+Las ramas permiten trabajar en funcionalidades o correcciones de forma independiente sin alterar directamente la rama principal.
+
+No es necesario imaginar que Git copia todo el proyecto físicamente cada vez que creás una rama: Git reutiliza los objetos y el historial existentes.
+
+### Comandos principales
+
+Bash
+
+```
+# Listar ramas locales
+git branch
+
+# Crear una rama
+git branch nombre-rama
+
+# Cambiar a una rama
+git switch nombre-rama
+
+# Crear una rama y cambiar a ella
+git switch -c nombre-rama
+
+# Eliminar una rama local ya fusionada
+git branch -d nombre-rama
+```
+
+También existe el comando clásico:
+
+Bash
+
+```
+git checkout nombre-rama
+```
+
+Actualmente, `git switch` suele ser más claro para cambiar de rama.
+
+### Ejemplo de trabajo con ramas
+
+Supongamos que estás desarrollando una aplicación y querés agregar un sistema de inicio de sesión.
+
+Bash
+
+```
+git switch -c feature/inicio-sesion
+```
+
+Trabajás en la funcionalidad y creás los commits correspondientes. Cuando está lista, podés fusionarla con la rama principal.
+
+Los nombres descriptivos facilitan saber qué propósito tiene cada rama. Algunos ejemplos:
+
+* `feature/inicio-sesion`
+
+* `fix/error-validacion`
+
+* `docs/actualizar-readme`
+
+## 8. Merge y conflictos
+
+### 8.1. Fusionar ramas
+
+`git merge` integra los cambios de otra rama en la rama en la que estás situado.
+
+Bash
+
+```
+git switch main
+git merge feature/inicio-sesion
+```
+
+En este ejemplo, los cambios de `feature/inicio-sesion` se integran en `main`.
+
+Git puede realizar una fusión rápida (fast-forward) si la rama de destino no avanzó por separado desde el punto de partida de la otra rama. En otros casos, puede crear un commit de fusión.
+
+### 8.2. Conflictos de fusión
+
+Un conflicto aparece cuando Git no puede combinar automáticamente ciertos cambios. Por ejemplo, dos ramas modificaron la misma parte de un archivo de formas incompatibles.
+
+No basta con que la rama principal haya recibido commits después de crear la otra rama para que necesariamente haya conflictos.
+
+Cuando aparece uno, el archivo puede contener marcadores como estos:
+
+```
+<<<<<<< HEAD
+Código de la rama actual
+=======
+Código de la otra rama
+>>>>>>> feature/inicio-sesion
+```
+
+Para resolverlo:
+
+1. Abrí el archivo en conflicto.
+
+2. Elegí qué contenido conservar o combiná las dos versiones.
+
+3. Eliminá los marcadores de conflicto.
+
+4. Prepará el archivo resuelto.
+
+5. Completá la operación.
+
+Bash
+
+```
+git add archivo.txt
+git commit
+```
+
+En una fusión normal, el último comando crea el commit de fusión cuando es necesario. Si la fusión fue de tipo fast-forward, no se necesita ese commit adicional. Si el conflicto ocurrió durante un rebase, corresponde usar `git rebase --continue` en lugar de completar una fusión.
+
+## 9. GitHub y los repositorios remotos
+
+Git es el sistema de control de versiones. GitHub es una plataforma que aloja repositorios Git y agrega herramientas para colaborar, revisar código y organizar proyectos.
+
+Un repositorio remoto puede tener distintos nombres, pero el nombre convencional del remoto principal suele ser `origin`.
+
+### 9.1. Clonar un repositorio
+
+Bash
+
+```
+git clone URL-del-repositorio
+```
+
+Descarga una copia del repositorio remoto, con su historial disponible y una rama de trabajo configurada según el repositorio.
+
+### 9.2. Enviar cambios: git push
+
+Bash
+
+```
+git push origin main
+```
+
+Envía los commits locales de la rama `main` al remoto `origin`, siempre que la operación esté permitida y no requiera resolver primero divergencias.
+
+### 9.3. Descargar cambios: git fetch y git pull
+
+`git fetch`
+
+Bash
+
+```
+git fetch origin
+```
+
+Descarga actualizaciones del remoto y actualiza referencias remotas, como `origin/main`, sin fusionarlas automáticamente con tu rama local.
+
+Después podés revisar los cambios:
+
+Bash
+
+```
+git log --oneline main..origin/main
+git diff main origin/main
+```
+
+`git pull`
+
+Bash
+
+```
+git pull origin main
+```
+
+Descarga los cambios del remoto y los integra en la rama actual. Habitualmente equivale a ejecutar `git fetch` y luego una integración mediante merge o rebase, según la configuración y las opciones utilizadas.
+
+La diferencia práctica es:
+
+* Usá `git fetch` si querés revisar primero qué cambió.
+
+* Usá `git pull` si querés actualizar tu rama con los cambios remotos.
+
+`git pull` no garantiza que la integración sea automática: puede requerir resolver conflictos.
+
+### 9.4. Conectar un repositorio local con GitHub
+
+Si ya tenés un proyecto local y creaste un repositorio remoto vacío en GitHub, podés vincularlos así:
+
+Bash
+
+```
+git remote add origin URL-del-repositorio
+git branch -M main
+git push -u origin main
+```
+
+* `git remote add origin` registra el remoto.
+
+* `git branch -M main` renombra la rama actual a `main`.
+
+* `git push -u origin main` publica la rama y configura su rama de seguimiento, facilitando los siguientes `git push` y `git pull`.
+
+Para consultar los remotos configurados:
+
+Bash
+
+```
+git remote -v
+```
+
+El nombre `origin` no significa necesariamente que sea el lugar original de descarga; es simplemente el nombre convencional que Git asigna al remoto principal al clonar un repositorio.
+
+## 10. Forks, pull requests e issues
+
+### Fork
+
+Un fork es una copia de un repositorio en otra cuenta o espacio de GitHub. Es útil para contribuir a proyectos en los que no tenés permisos de escritura directa.
+
+### Pull request (PR)
+
+Un pull request es una solicitud para que los responsables de un repositorio revisen e integren cambios propuestos.
+
+El flujo habitual es:
+
+1. Hacer un fork del proyecto.
+
+2. Clonar tu fork.
+
+3. Crear una rama de trabajo.
+
+4. Implementar los cambios y crear commits.
+
+5. Publicar la rama.
+
+6. Abrir un pull request hacia el repositorio original.
+
+Un pull request no fusiona los cambios automáticamente: el equipo responsable puede revisarlos, pedir correcciones, aprobarlos o rechazarlos.
+
+### GitHub Issues
+
+Los issues sirven para registrar y seguir tareas, errores, propuestas y mejoras.
+
+Pueden incluir:
+
+* Asignados: personas responsables de trabajar en el issue.
+
+* Etiquetas: clasificación por tipo, prioridad o área.
+
+* Milestones: agrupaciones de issues asociadas a un objetivo o etapa.
+
+* Checklist: lista de subtareas para controlar el progreso.
+
+No todos los issues son necesariamente tareas asignadas a un desarrollador; también pueden representar preguntas, errores o propuestas de nuevas funcionalidades.
+
+## 11. Buenas prácticas con Git y GitHub
+
+* Agregar un archivo `.gitignore` para excluir archivos que no deben versionarse, como compilaciones, archivos temporales o credenciales.
+
+* Configurar correctamente el nombre y el correo de Git.
+
+* Crear ramas con una única responsabilidad bien definida.
+
+* Usar nombres descriptivos y consistentes, por ejemplo, `feature/menu-principal`.
+
+* Evitar trabajar directamente sobre la rama principal cuando el flujo del equipo utiliza ramas de trabajo.
+
+* Hacer commits atómicos: cada commit debería representar un cambio pequeño y coherente.
+
+* Escribir mensajes claros y concisos, como `Corregir validación del formulario`.
+
+* Actualizar la rama con frecuencia y revisar los cambios remotos antes de integrarlos cuando sea necesario.
+
+* Probar los cambios antes de abrir un pull request.
+
+* Revisar el código mediante pull requests para facilitar la colaboración.
+
+* Aprender estrategias de branching como GitHub Flow o Git Flow.
+
+* Usar etiquetas (tags) para identificar versiones importantes, como `v1.0.0`. No es necesario crear un tag para cada commit.
+
+* No subir contraseñas, tokens ni credenciales al repositorio.
+
+## 12. Comandos para seguir aprendiendo
+
+| Comando o concepto                       | Para qué sirve                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `git stash`                              | Guardar temporalmente cambios sin crear un commit.                                         |
+| `git stash pop`                          | Recuperar los cambios guardados y quitar esa entrada del stash si se aplica correctamente. |
+| `git stash list`                         | Listar los cambios guardados temporalmente.                                                |
+| `git cherry-pick HASH`                   | Aplicar a la rama actual el cambio introducido por un commit específico.                   |
+| `git tag v1.0.0`                         | Crear una etiqueta para identificar un punto del historial.                                |
+| `git tag`                                | Listar las etiquetas.                                                                      |
+| `git tag -a v1.0.0 -m "Primera versión"` | Crear una etiqueta anotada con un mensaje.                                                 |
+| `git push origin v1.0.0`                 | Publicar una etiqueta en el remoto.                                                        |
+| GitHub Flow                              | Estrategia de trabajo con ramas y pull requests.                                           |
+| Git Flow                                 | Modelo de branching con ramas específicas para desarrollo y versiones.                     |
+
+También podés explorar extensiones de Visual Studio Code para visualizar el historial, las ramas y los cambios. Una herramienta conocida es Git Graph.
+
+## 13. Resumen del flujo habitual de trabajo
+
+1. Crear o clonar el repositorio. `git init` o `git clone URL`.
+
+2. Crear una rama de trabajo. `git switch -c feature/mi-funcionalidad`.
+
+3. Modificar y probar el código. Trabajá en tu directorio de trabajo.
+
+4. Preparar los cambios. `git add .` o `git add archivo.txt`.
+
+5. Registrar una versión. `git commit -m "Agregar funcionalidad"`.
+
+6. Actualizarte con el remoto cuando corresponda. `git fetch` o `git pull`.
+
+7. Publicar la rama. `git push -u origin feature/mi-funcionalidad`.
+
+8. Revisar e integrar. Abrí un pull request y, una vez aprobado, fusioná los cambios.
+
+La idea central para recordar es: `add` prepara, `commit` registra, `push` publica, `fetch` descarga referencias y `pull` descarga e integra.
